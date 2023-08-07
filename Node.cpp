@@ -72,7 +72,7 @@ void Node::setNumProcesses(int _numProcesses) {
 
 void Node::createDataset() {
     if(rank == 0) {
-        int numPoints = 7000, pointDimension=10, numClusters=12, maxIteration=1000;
+        int numPoints = 40000, pointDimension=10, numClusters=12, maxIteration=1000;
         newDatasetFilename = "random-dataset";
         DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
         builder.createDataset();
@@ -170,17 +170,17 @@ void Node::readDataset() {
                 stringstream ss(line);
                 getline(ss, line, ',');
                 total_values = stoi(line);
-                cout << "Total values is: " << total_values << endl;
+                cout << "Dimension: " << total_values << endl;
 
                 getline(ss, line, ',');
                 K = stoi(line);
-                cout << "Number of clusters K is: " << K << endl;
+                cout << "Number of clusters K: " << K << endl;
 
                 //Adding here other values of the first row
 
                 getline(ss, line, '\n');
                 max_iterations = stoi(line);
-                cout << "Max iteration is: " << max_iterations << endl;
+                cout << "Max iteration: " << max_iterations << endl;
                 count++;
             } else {
                 Point point;
@@ -697,16 +697,16 @@ void Node::getStatistics() {
 
         }
 
-        cout << "\n - Variance: " << endl;
-        cout << "    - SSW: " << endl;
-        vector<double> ssws = SSW();
-        for(int i = 0; i < ssws.size(); i++) {
-            cout << "       Cluster " << i << " : " << ssws[i] << endl;
-        }
+        // cout << "\n - Variance: " << endl;
+        // cout << "    - SSW: " << endl;
+        // vector<double> ssws = SSW();
+        // for(int i = 0; i < ssws.size(); i++) {
+        //     cout << "       Cluster " << i << " : " << ssws[i] << endl;
+        // }
 
-        cout << "\n   - SSB:    ";
-        double ssb = SSB();
-        cout << ssb << endl;
+        // cout << "\n   - SSB:    ";
+        // double ssb = SSB();
+        // cout << ssb << endl;
     }
 }
 

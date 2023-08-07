@@ -1,25 +1,19 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 
 if __name__ == '__main__':
-    # tweets = pd.read_csv('data/tweets_points_20.csv')
-    topics = pd.read_csv('../data/tweets_topics.csv')
-    res = pd.read_csv('../results/point-saved.csv')
+    res = pd.read_csv('results/point-saved.csv')
 
-    print(topics.shape)
-    print(res.shape)
-
-    id_to_topic = dict(zip(list(range(len(topics))), topics['topic'].tolist()))
-
-    print('\n----- TOPICS -----')
-    print(topics['topic'].value_counts())
+    res['Cluster_id'].value_counts().plot.bar(x='Cluster Id', y='Number of Points', rot=0)
+    plt.show()
+    print(res['Cluster_id'].value_counts())
 
     cluster_df = res.groupby('Cluster_id')['Point_id'].apply(list)
 
     for index, cluster in enumerate(cluster_df):
 
         print('----- CLUSTER {} -----'.format(index))
-        points_labeled = [id_to_topic[p] for p in cluster]
-        print(pd.Series(points_labeled).value_counts(normalize=True))
+        print(len(cluster))

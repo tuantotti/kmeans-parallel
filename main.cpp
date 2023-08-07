@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     Node node(rank, MPI_COMM_WORLD);
 
-    node.createDataset();
+    // node.createDataset();
     node.readDataset();
 
     node.scatterDataset();
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
         }
 
         if(notChanged == numNodes){
-            cout << "Rank " << rank << " No more changes, k-means terminates at iteration " << it << endl;
+            // cout << "Rank " << rank << " No more changes, k-means terminates at iteration " << it << endl;
             lastIteration = it;
             break;
         }
