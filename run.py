@@ -4,7 +4,8 @@ import subprocess
 import pandas as pd
 import csv
 
-num_processes = [1, 2, 4, 8, 16]
+# num_processes = [1, 2, 4, 6, 8, 10, 12, 14, 16]
+num_processes = range(2, 32, 2)
 # compile code 
 os.system("mpic++ -fopenmp -o main main.cpp Node.cpp DatasetBuilder.cpp")
 

@@ -72,7 +72,7 @@ void Node::setNumProcesses(int _numProcesses) {
 
 void Node::createDataset() {
     if(rank == 0) {
-        int numPoints = 40000, pointDimension=10, numClusters=12, maxIteration=1000;
+        int numPoints = 40000, pointDimension=3, numClusters=12, maxIteration=1000;
         newDatasetFilename = "random-dataset";
         DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
         builder.createDataset();
@@ -276,7 +276,7 @@ void Node::scatterDataset() {
 }
 
 
-void Node::extractCluster() {
+void Node::initCentroids() {
 
     /* Initially to extract the clusters, we choose randomly K point of the dataset. This action is performed
      * by the Node 0, who sends them to other nodes in broadcast. Ids of clusters are the same of their initial centroid point  */
@@ -377,6 +377,7 @@ void Node::extractCluster() {
 
 }
 
+// return the nearest cluster's ID for the given point
 int Node::getIdNearestCluster(Point p) {
     int idCluster = 0;  //is the position in the vector clusters, not the id of the point that represents the initial centroid
 
@@ -448,16 +449,9 @@ int Node::run(int it) {
 
         if(new_mem != old_mem){
             memberships[i] = new_mem;
-
-            //critical section : memCounter is an array and for each iteration we update at most two elements. For those element we
-            // need to guaratee the atomicity of the operation, but that lock must not block the access of other processes to
-            // other array elements.
-            // using atomic pragma resolves our issue: https://stackoverflow.com/questions/17553282/how-to-lock-element-of-array-using-tbb-openmp
-    
             memCounter[new_mem]++;
 
-            if(old_mem != -1){
-        
+            if(old_mem != -1) {
                 memCounter[old_mem]--;
             }
 
@@ -522,7 +516,7 @@ int Node::run(int it) {
 
 void Node::updateLocalSum() {
     //reset LocalSum at each iteration
-    for(int k = 0; k < K; k++){
+    for(int k = 0; k < K; k++) {
         for(int j = 0; j < total_values; j++){
             localSum[k].values[j] = 0;
         }
@@ -672,19 +666,16 @@ void Node::getStatistics() {
 
     if(rank == 0) {
         cout << "---------------------  Statistics  ------------------------- " << endl;
-
         cout << " - Iteration computed: " << lastIteration << endl;
-
         cout << "\n - Execution time: " << endl;
         for(int i = 0; i < numNodes; i++){
             cout << "Process " << i << ": " << executionTimes[i] << endl;
-            totalExeTimeWithCom += executionTimes[i];
+            if (totalExeTimeWithCom < executionTimes[i]) {
+                totalExeTimeWithCom = executionTimes[i];
+            }
         }
 
         cout<< " - Total Time with Communication: "<< totalExeTimeWithCom << endl;
-        
-        // writeExecutionTime("execution-time-with-com", numProcesses, totalExeTimeWithCom);
-
         cout << "\n - Number of points in each cluster" << endl;
         for(int k = 0; k < K; k++){
             int count = 0;
@@ -694,7 +685,6 @@ void Node::getStatistics() {
                 }
             }
             cout << "Cluster " << k << " : " << count << endl;
-
         }
 
         // cout << "\n - Variance: " << endl;

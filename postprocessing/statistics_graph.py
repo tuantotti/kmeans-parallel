@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 
 def display_graph_with_tcom():
-    df_additonal = pd.read_csv('results/execution-time-with-communication.csv', nrows=6)
+    df_additonal = pd.read_csv('results/execution-time-with-communication.csv', nrows=16)
     df_additonal.drop_duplicates(inplace=True)
-    df = pd.read_csv('results/execution-time-with-communication.csv', skiprows=6)
+    df = pd.read_csv('results/execution-time-with-communication.csv', skiprows=16)
 
     numProcesses = df['Number of Processes']
     exeTimeWithCom = df['Total Time with Communication']

@@ -34,7 +34,9 @@ int main(int argc, char *argv[]) {
     node.readDataset();
 
     node.scatterDataset();
-    node.extractCluster();
+    node.initCentroids();
+
+    // k-means loop
     lastIteration = 0;
     for (int it = 0; it < node.getMaxIterations(); it++) {
         if(rank == 0) {

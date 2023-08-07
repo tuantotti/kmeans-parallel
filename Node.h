@@ -59,7 +59,7 @@ public:
     void readDataset();
     void createDataset();
     void scatterDataset();
-    void extractCluster();
+    void initCentroids();
     int run(int it);
     void computeGlobalMembership();
     int getNumPoints();
