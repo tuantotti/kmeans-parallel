@@ -1,25 +1,20 @@
 # K-means parallel
-A parallel implementation of the unsupervised clustering algorithm K-means with **OpenMP** and **MPI**. The parallelization leverages on a shared memory multiprocessing programming (OpenMP) and a message-passing protocol that allows the communication among nodes (MPI).
+A parallel implementation of the unsupervised clustering algorithm K-means with **OpenMP**. The parallelization leverages on a message-passing protocol that allows the communication among nodes (MPI).
 
-<p align="center">
-<img width="350" src="https://github.com/tmscarla/k-means-parallel/blob/master/img/kmeans.gif"/>
-</p>
 
 ## Requirements
 The project requires:
-- MPICH
-- OpenMP
+- OpenMPI
 
 ## Goal
 Our goal is to maximize the performance, thus minimize the execution time of the algorithm. In this case our hyperparameters are:
 - number of processors (MPI) 
-- number of threads considered in the parallel region (OpenMP)
 Best performance strongly depends on computer specifications. 
 
 ## Dataset 
 The first line of the dataset must contain the values of the initial parameters, in the following order: 
 <p align="center">
-	<i>n. point dimension, n. clusters, max iterations</i>
+	<i>n. clusters, max iterations</i>
 </p>
 Then, each line refers to point dimensions values.
 You can create your own dataset where the dimension values of each point are randomly assigned. 
@@ -27,9 +22,8 @@ You can create your own dataset where the dimension values of each point are ran
 ## Compile and run
 To compile it you need to run the following command: 
 ~~~~
-mpic++ -fopenmp -o main main.cpp Node.cpp DatasetBuilder.cpp
+mpic++ -o main main.cpp Node.cpp DatasetBuilder.cpp
 ~~~~
-Where the -fopenmp flag that includes the GCC's OpenMP implementation. Then, if you want to run the program:
 ~~~~
 mpirun -np (number of processors) ./main
 ~~~~
@@ -51,11 +45,11 @@ Suppose we have P processors, where the master node is defined by the Rank 0, an
 
 ### K-means 'loop'
 4. In each node the following steps are executed: 
-	- for each point in the local dataset find the membership among the K clusters. Each point must be in one and only one cluster. Distance calculation between point and centroids is performed in parallel using OpenMP
+	- for each point in the local dataset find the membership among the K clusters. Each point must be in one and only one cluster. Distance calculation between point and centroids is performed
 	- within each cluster, sum 'dimension-to-dimension' all the points that belong to that cluster. We obtain a local for each cluster, in each node. 
 
 <p align="center">
-<img width="80%" src="https://github.com/tmscarla/k-means-parallel/blob/master/img/MPI_Allreduce.png"/>
+<img width="80%" src="https://github.com/tuantotti/kmeans-parallel/blob/main/img/MPI_Allreduce.png"/>
 </p>
 
 5. Once we get the local summations, with MPI_Allreduce operation, we can store the sum of the local summations (global sum) in each node. In the same way we can obtain the global number of points in each cluster and store that value in each nodes. So to recalculate a centroid, we can simply divide the global sum of that cluster over the number of points belong to it. Compute new centroids
@@ -69,10 +63,5 @@ Two distance metrics are implemented:
 ## Termination
 K-means converges when no more point changes its membership status. Since our dataset is distributed among nodes, we cannot know directly if no more changes occurs. 
 To deal with this, we have defined a flag in each node that is set when no more changes in the local dataset happen. Those flags are collected by nodes to check if there are changes or not. Furthermore, in order to avoid unnecessary long computation, we have limited the number of iteration that can be executed. 
-
-
-<p align="center">
-<img width="90%" src="https://github.com/tmscarla/k-means-parallel/blob/master/img/summary.png"/>
-</p>
 
 
