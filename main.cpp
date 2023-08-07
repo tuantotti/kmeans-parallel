@@ -10,13 +10,7 @@
 #include <sstream>
 
 
-// #define MAX_DIM 100
-
 using namespace std;
-
-/*Dobbiamo per forza creare una classe o una struct Point per fare in modo che il punto venga salvato in un
- * vettore. Non si può creare un vettore di arrays di double*/
-
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
@@ -28,8 +22,6 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &numNodes);
 
-    //cout << "I'm rank: " << rank << endl;
-
     int total_values;
     int total_points;
     int K, max_iterations;
@@ -38,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     Node node(rank, MPI_COMM_WORLD);
 
-    // node.createDataset();
+    node.createDataset();
     node.readDataset();
 
     node.scatterDataset();
@@ -62,11 +54,11 @@ int main(int argc, char *argv[]) {
         //cout << "Iteration " << it << " ends!" << endl;
 
         if(rank == 0){
-            //cout << "Global not changed = " << notChanged << ". NumNodes = " << numNodes << endl;
+            // cout << "Global not changed = " << notChanged << ". NumNodes = " << numNodes << endl;
         }
 
         if(notChanged == numNodes){
-            //cout << "No more changes, k-means terminates at iteration " << it << endl;
+            cout << "Rank " << rank << " No more changes, k-means terminates at iteration " << it << endl;
             lastIteration = it;
             break;
         }
@@ -76,23 +68,26 @@ int main(int argc, char *argv[]) {
     node.setLastIteration(lastIteration);
 
     node.computeGlobalMembership();
-    if(rank == 0){
+    if(rank == 0) {
         int* gm;
         gm = node.getGlobalMemberships();
         int numPoints = node.getNumPoints();
 
-        //node.printClusters();
+        // node.printClusters();
 
-        string doWrite;
-        cout << "Do you want to save points membership? (y/n)" << endl;
-        getline(cin, doWrite);
-        if(doWrite == "y") {
-            string outFilename = "membershipsFilename";
-            cout << "Specify output filename: (Eg: point-saved --> save in /results/point-saved.csv)\n";
-            getline(cin, outFilename);
+        // string doWrite;
+        // cout << "Do you want to save points membership? (y/n)" << endl;
+        // getline(cin, doWrite);
+        // if(doWrite == "y") {
+        //     string outFilename = "membershipsFilename";
+        //     cout << "Specify output filename: (Eg: point-saved --> save in /results/point-saved.csv)\n";
+        //     getline(cin, outFilename);
 
-            node.writeClusterMembership(outFilename);
-        }
+        //     node.writeClusterMembership(outFilename);
+        // }
+
+        node.writeClusterMembership("point-saved");
+
     }
 
     node.getStatistics();
@@ -101,9 +96,6 @@ int main(int argc, char *argv[]) {
 
     /*Do all your I/O with cout in the process with rank 0. If you want to output some data from other processes,
      * just send MPI message with this data to rank 0.*/
-
-
-
     MPI_Finalize();
 
 }

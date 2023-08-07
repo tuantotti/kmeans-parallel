@@ -3,8 +3,6 @@
 //
 
 #include <mpi.h>
-//#include "/usr/local/opt/libomp/include/omp.h"
-#include <omp.h>
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -14,8 +12,6 @@
 #include <math.h>
 #include "Node.h"
 #include "DatasetBuilder.h"
-
-#define NUM_THREAD 4
 
 
 Node::Node(int rank, MPI_Comm comm) : rank(rank), comm(comm), notChanged(1) {
@@ -31,7 +27,6 @@ Node::Node(int rank, MPI_Comm comm) : rank(rank), comm(comm), notChanged(1) {
     lastIteration = 0;
     newDatasetCreated = false;
     distance = 0;
-    omp_total_time = 0.0;
 }
 
 double Node::squared_norm(Point p1, Point p2){
@@ -70,52 +65,66 @@ void Node::setLastIteration(int lastIt) {
     lastIteration = lastIt;
 }
 
+void Node::setNumProcesses(int _numProcesses) {
+    numProcesses = _numProcesses;
+}
 
-// void Node::createDataset() {
-//     if(rank == 0) {
 
-//         string answer;
-//         cout << "Do you want to create a new dataset? (yes/no)" << endl;
-//         getline(cin, answer);
+void Node::createDataset() {
+    if(rank == 0) {
+        int numPoints = 7000, pointDimension=10, numClusters=12, maxIteration=1000;
+        newDatasetFilename = "random-dataset";
+        DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
+        builder.createDataset();
 
-//         if (answer == "yes") {
-//             int numPoints, pointDimension, numClusters, maxIteration;
-//             string filename, out;
+        newDatasetCreated = true;
 
-//             cout << "How many points do you want to create?" << endl;
-//             getline(cin, out);
-//             numPoints = stoi(out);
+        // string answer;
+        // cout << "Do you want to create a new dataset? (yes/no)" << endl;
+        // getline(cin, answer);
 
-//             cout << "Point dimension: ";
-//             getline(cin, out);
-//             pointDimension = stoi(out);
+        // if (answer == "yes") {
+        //     int numPoints, pointDimension, numClusters, maxIteration;
+        //     string filename, out;
 
-//             cout << "\nNumber of clusters: ";
-//             getline(cin, out);
-//             numClusters = stoi(out);
+        //     cout << "How many points do you want to create?" << endl;
+        //     getline(cin, out);
+        //     numPoints = stoi(out);
 
-//             cout << "\nMax iteration: ";
-//             getline(cin, out);
-//             maxIteration = stoi(out);
+        //     cout << "Point dimension: ";
+        //     getline(cin, out);
+        //     pointDimension = stoi(out);
 
-//             cout << "\nFilename: ";
-//             getline(cin, newDatasetFilename);
+        //     cout << "\nNumber of clusters: ";
+        //     getline(cin, out);
+        //     numClusters = stoi(out);
 
-//             DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
-//             builder.createDataset();
+        //     cout << "\nMax iteration: ";
+        //     getline(cin, out);
+        //     maxIteration = stoi(out);
 
-//             newDatasetCreated = true;
-//         }
+        //     cout << "\nFilename: ";
+        //     getline(cin, newDatasetFilename);
 
-//     }
+        //     DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
+        //     builder.createDataset();
 
-// }
+        //     newDatasetCreated = true;
+        // }
+
+    }
+
+}
 
 void Node::readDataset() {
 
     if (rank == 0) {
         string filename, point_dimension;
-        filename = "data/tweets_points_20.csv";
+        if (newDatasetCreated) {
+            filename = "data/" + newDatasetFilename + ".csv";
+        } else {
+            filename = "data/random-dataset.csv";
+        }
 
         // string distance_choice;
         // bool onDistance = true;
@@ -238,10 +247,11 @@ void Node::scatterDataset() {
             }
         }
     }
-
+    
+    // scatter number over the node
     MPI_Scatter(pointsPerNode, 1, MPI_INT, &num_local_points, 1, MPI_INT, 0, comm);
 
-
+    // Resizes the container so that it contains n elements.
     localDataset.resize(num_local_points);
 
     //Scatter points over the nodes
@@ -278,36 +288,21 @@ void Node::extractCluster() {
             cout << "ERROR: Number of cluster >= number of points " << endl;
             return;
         }
-        /*
-        vector<int> clusterIndices;
-        vector<int> prohibitedIndices;
-
-        for (int i = 0; i < K; i++) {
-            while (true) {
-                int randIndex = rand() % dataset.size();
-
-                if (find(prohibitedIndices.begin(), prohibitedIndices.end(), randIndex) == prohibitedIndices.end()) {
-                    prohibitedIndices.push_back(randIndex);
-                    clusterIndices.push_back(randIndex);
-                    break;
-                }
-            }
-        }
-         */
 
         string string_choice;
         int choice;
         bool gameOn = true;
 
         while(gameOn){
-            cout << "\nChoose initialization method" <<endl;
-            cout << "1) Random \n";
-            cout << "2) First k points\n";
-            cout << "3) 12 points referring to 12 different topics\n";
-            cout << "Enter your choice and press return: ";
+            // cout << "\nChoose initialization method" <<endl;
+            // cout << "1) Random \n";
+            // cout << "2) First k points\n";
+            // cout << "3) 12 points referring to 12 different topics\n";
+            // cout << "Enter your choice and press return: ";
 
-            getline(cin, string_choice);
-            choice = atoi(string_choice.c_str());
+            // getline(cin, string_choice);
+            // choice = atoi(string_choice.c_str());
+            choice = 1;
 
             switch (choice){
                 case 1: {
@@ -446,8 +441,6 @@ int Node::run(int it) {
         memCounter = new int[K] ();
     }
 
-    t_i = omp_get_wtime();
-    #pragma omp parallel for shared(memCounter) num_threads(NUM_THREAD)
     for (int i = 0; i < localDataset.size(); i++) {
 
         int old_mem = memberships[i];
@@ -460,22 +453,17 @@ int Node::run(int it) {
             // need to guaratee the atomicity of the operation, but that lock must not block the access of other processes to
             // other array elements.
             // using atomic pragma resolves our issue: https://stackoverflow.com/questions/17553282/how-to-lock-element-of-array-using-tbb-openmp
-            #pragma omp atomic update
+    
             memCounter[new_mem]++;
 
             if(old_mem != -1){
-                #pragma omp atomic update
+        
                 memCounter[old_mem]--;
             }
 
             notChanged = 0;
         }
     }
-
-    t_f = omp_get_wtime();
-    omp_total_time += t_f - t_i;
-
-
 
     MPI_Allreduce(memCounter, resMemCounter, K, MPI_INT, MPI_SUM, comm);  // We obtain the number of points that belong to each cluster
     updateLocalSum();
@@ -495,18 +483,11 @@ int Node::run(int it) {
         reduceArr = new double[K * total_values];
     }
 
-    t_i = omp_get_wtime();
-    #pragma omp parallel for num_threads(NUM_THREAD) shared(reduceArr)  //Questo forse rallenta
     for (int i = 0; i < K; i++) {
         for (int j = 0; j < total_values; j++) {
             reduceArr[i * total_values + j] = localSum[i].values[j];
         }
     }
-
-    t_f = omp_get_wtime();
-    omp_total_time += t_f - t_i;
-    //cout << "OMP time to reduceArr : " << t_f - t_i << endl;
-
 
     MPI_Allreduce(reduceArr, reduceResults, K * total_values, MPI_DOUBLE, MPI_SUM,
                   comm);
@@ -679,19 +660,17 @@ double Node::SSB() {
 void Node::getStatistics() {
 
     double *executionTimes;
-    double *ompExecTimes;
+    double totalExeTimeWithCom;
     int numNodes;
     MPI_Comm_size(comm, &numNodes);
 
     if(rank == 0) {
         executionTimes = new double[numNodes];
-        ompExecTimes = new double[numNodes];
     }
 
     MPI_Gather(&total_time, 1 , MPI_DOUBLE, executionTimes, 1, MPI_DOUBLE, 0, comm);
-    MPI_Gather(&omp_total_time, 1, MPI_DOUBLE, ompExecTimes, 1, MPI_DOUBLE, 0, comm);
 
-    if(rank == 0){
+    if(rank == 0) {
         cout << "---------------------  Statistics  ------------------------- " << endl;
 
         cout << " - Iteration computed: " << lastIteration << endl;
@@ -699,16 +678,12 @@ void Node::getStatistics() {
         cout << "\n - Execution time: " << endl;
         for(int i = 0; i < numNodes; i++){
             cout << "Process " << i << ": " << executionTimes[i] << endl;
+            totalExeTimeWithCom += executionTimes[i];
         }
 
-        cout << "\n - OMP Execution time: " << endl;
-        double total_omp = 0.0;
-        for(int i = 0; i < numNodes; i++){
-            cout << "Process " << i << ": " << ompExecTimes[i] << endl;
-            total_omp += ompExecTimes[i];
-        }
-
-        cout << "Total: " << total_omp << endl;
+        cout<< " - Total Time with Communication: "<< totalExeTimeWithCom << endl;
+        
+        // writeExecutionTime("execution-time-with-com", numProcesses, totalExeTimeWithCom);
 
         cout << "\n - Number of points in each cluster" << endl;
         for(int k = 0; k < K; k++){
