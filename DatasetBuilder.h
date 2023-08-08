@@ -1,7 +1,3 @@
-//
-// Created by Alessio Russo Introito on 2019-08-26.
-//
-
 #ifndef K_MEANS_PARALLEL_DATASETBUILDER_H
 #define K_MEANS_PARALLEL_DATASETBUILDER_H
 

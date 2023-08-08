@@ -1,7 +1,3 @@
-//
-// Created by Claudio Russo Introito on 2019-04-28.
-//
-
 #include <mpi.h>
 #include <iostream>
 #include <algorithm>
@@ -73,8 +69,8 @@ void Node::setNumProcesses(int _numProcesses) {
 
 void Node::createDataset() {
     if(rank == 0) {
-        int numPoints = 40000, pointDimension=3, numClusters=12, maxIteration=1000;
-        newDatasetFilename = "random-dataset";
+        int numPoints = 400, pointDimension=2, numClusters=6, maxIteration=1000;
+        newDatasetFilename = "random-dataset-2";
         DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
         builder.createDataset();
 
@@ -124,7 +120,7 @@ void Node::readDataset() {
         if (newDatasetCreated) {
             filename = "data/" + newDatasetFilename + ".csv";
         } else {
-            filename = "data/random-dataset.csv";
+            filename = "data/random-dataset-2.csv";
         }
 
         // string distance_choice;
@@ -259,8 +255,7 @@ void Node::scatterDataset() {
 
     t_i = MPI_Wtime();
     //Scatter points over the nodes
-    MPI_Scatterv(dataset.data(), pointsPerNode, datasetDisp, pointType, localDataset.data(), num_local_points,
-                 pointType, 0, comm);
+    MPI_Scatterv(dataset.data(), pointsPerNode, datasetDisp, pointType, localDataset.data(), num_local_points, pointType, 0, comm);
 
 
     //Send the dimension of points to each node
@@ -435,7 +430,7 @@ int Node::getIdNearestCluster(Point p) {
     return idCluster;
 }
 
-
+// kmeans loop
 int Node::run(int it) {
     double start = MPI_Wtime();
     double t_i,t_f;
@@ -454,6 +449,7 @@ int Node::run(int it) {
         memCounter = new int[K] ();
     }
 
+    // find membership (which point belongs to which cluster)
     for (int i = 0; i < localDataset.size(); i++) {
 
         int old_mem = memberships[i];
@@ -476,7 +472,7 @@ int Node::run(int it) {
     total_time_without_comm += t_f - t_i;
     updateLocalSum();
 
-    /*To recalculate cluster centroids, we sum locally the points (values-to-values) which belong to a cluster.
+    /* To recalculate cluster centroids, we sum locally the points which belong to a cluster.
      * The result will be a point with values equal to that sum. This point is sent (with AllReduce) to each
      * node by each node with AllReduce, which computes the sum of each value-to-value among all sent points.
      */
@@ -508,7 +504,7 @@ int Node::run(int it) {
             if(resMemCounter[k] != 0) {
                 reduceResults[k * total_values + i] /= resMemCounter[k];
                 clusters[k].values[i] = reduceResults[k * total_values + i];
-            }else{
+            } else{
                 reduceResults[k * total_values + i] /= 1;
                 clusters[k].values[i] = reduceResults[k * total_values + i];
             }

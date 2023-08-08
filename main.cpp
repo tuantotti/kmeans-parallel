@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
         //     node.writeClusterMembership(outFilename);
         // }
 
-        node.writeClusterMembership("point-saved");
+        node.writeClusterMembership("point-saved-2");
 
     }
 

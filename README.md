@@ -45,8 +45,9 @@ Suppose we have P processors, where the master node is defined by the Rank 0, an
 
 ### K-means 'loop'
 4. In each node the following steps are executed: 
-	- for each point in the local dataset find the membership among the K clusters. Each point must be in one and only one cluster. Distance calculation between point and centroids is performed
-	- within each cluster, sum 'dimension-to-dimension' all the points that belong to that cluster. We obtain a local for each cluster, in each node. 
+	- In each processor for each data point find membership using distance. (Euclidean, Cosine Similarity)
+	- Recalculate local means for each cluster in each processor.
+	- Globally broadcast all local means for each processor find the global mean.
 
 <p align="center">
 <img width="80%" src="https://github.com/tuantotti/kmeans-parallel/blob/main/img/MPI_Allreduce.png"/>

@@ -1,7 +1,3 @@
-//
-// Created by Alessio Russo Introito on 2019-08-26.
-//
-
 #include "DatasetBuilder.h"
 #include <iostream>
 #include <fstream>
@@ -11,7 +7,6 @@
 #include <ctime>
 
 DatasetBuilder::DatasetBuilder(int numPoints, int pointDimension, int numClusters, int maxIteration, string filename) {
-    //numPoints(numPoints), pointDimension(pointDimension), numClusters(numClusters),  maxIteration(maxIteration), filename(filename) {
     this->numPoints = numPoints;
     this->pointDimension = pointDimension;
     this->numClusters = numClusters;

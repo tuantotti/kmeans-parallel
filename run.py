@@ -64,4 +64,4 @@ with open('results/execution-time-with-communication.csv', 'w', newline='') as c
     csvwriter.writerows(df.values.tolist())
 
 # run statistics_graph.py file
-os.system("python3 postprocessing/statistics_graph.py")
+# os.system("python3 postprocessing/statistics_graph.py")

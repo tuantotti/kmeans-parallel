@@ -1,7 +1,3 @@
-//
-// Created by Alessio Russo Introito on 2019-03-02.
-//
-
 #ifndef KMEANSCLUSTERING_POINT_H
 #define KMEANSCLUSTERING_POINT_H
 
