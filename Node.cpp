@@ -120,7 +120,7 @@ void Node::readDataset() {
         if (newDatasetCreated) {
             filename = "data/" + newDatasetFilename + ".csv";
         } else {
-            filename = "data/random-dataset-2.csv";
+            filename = "data/random-dataset-2-150000.csv";
         }
 
         // string distance_choice;

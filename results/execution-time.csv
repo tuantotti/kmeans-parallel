@@ -1,0 +1,12 @@
+Number of Clusters,Total Points,0
+3.0,60000.0,0
+3.0,60000.0,0
+3.0,60000.0,0
+3.0,60000.0,0
+3.0,60000.0,0
+Number of Processes,Total Time with Communication,Total Time without Communication
+16,103.668,0.473573
+32,88.936,0.0470086
+40,105.967,0.593098
+64,95.5914,0.0504316
+128,116.174,0.0775488
