@@ -24,6 +24,7 @@ Node::Node(int rank, MPI_Comm comm) : rank(rank), comm(comm), notChanged(1) {
     MPI_Type_create_struct(3, blocksize, displ, blockType, &pointType);
     MPI_Type_commit(&pointType);
     total_time = 0;
+    total_time_without_comm = 0;
     lastIteration = 0;
     newDatasetCreated = false;
     distance = 0;
@@ -209,7 +210,7 @@ void Node::readDataset() {
 
 void Node::scatterDataset() {
     /* Scatter dataset among nodes */
-
+    double t_i, t_f;
     double start = MPI_Wtime();
 
     int numNodes;
@@ -247,13 +248,16 @@ void Node::scatterDataset() {
             }
         }
     }
-    
+    t_i = MPI_Wtime();
     // scatter number over the node
     MPI_Scatter(pointsPerNode, 1, MPI_INT, &num_local_points, 1, MPI_INT, 0, comm);
-
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
+    
     // Resizes the container so that it contains n elements.
     localDataset.resize(num_local_points);
 
+    t_i = MPI_Wtime();
     //Scatter points over the nodes
     MPI_Scatterv(dataset.data(), pointsPerNode, datasetDisp, pointType, localDataset.data(), num_local_points,
                  pointType, 0, comm);
@@ -261,23 +265,27 @@ void Node::scatterDataset() {
 
     //Send the dimension of points to each node
     MPI_Bcast(&total_values, 1, MPI_INT, 0, comm);
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
 
     memberships.resize(num_local_points);
 
     for (int i = 0; i < num_local_points; i++) {
         memberships[i] = -1;
     }
-
+    t_i = MPI_Wtime();
     MPI_Bcast(&numPoints, 1, MPI_INT, 0, comm);
     MPI_Bcast(&max_iterations, 1, MPI_INT, 0, comm);
 
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
     double end = MPI_Wtime();
     total_time += end - start;
 }
 
 
 void Node::initCentroids() {
-
+    double t_i, t_f;
     /* Initially to extract the clusters, we choose randomly K point of the dataset. This action is performed
      * by the Node 0, who sends them to other nodes in broadcast. Ids of clusters are the same of their initial centroid point  */
 
@@ -360,14 +368,18 @@ void Node::initCentroids() {
     }
 
     double start_ = MPI_Wtime();
-
+    t_i = MPI_Wtime();
     //Send the number of clusters in broadcast
     MPI_Bcast(&K, 1, MPI_INT, 0, comm);
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
 
     clusters.resize(K);
-
+    t_i = MPI_Wtime();
     //Send the clusters centroids values
     MPI_Bcast(clusters.data(), K, pointType, 0, comm);
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
 
     double end = MPI_Wtime();
 
@@ -458,8 +470,10 @@ int Node::run(int it) {
             notChanged = 0;
         }
     }
-
+    t_i = MPI_Wtime();
     MPI_Allreduce(memCounter, resMemCounter, K, MPI_INT, MPI_SUM, comm);  // We obtain the number of points that belong to each cluster
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
     updateLocalSum();
 
     /*To recalculate cluster centroids, we sum locally the points (values-to-values) which belong to a cluster.
@@ -482,9 +496,11 @@ int Node::run(int it) {
             reduceArr[i * total_values + j] = localSum[i].values[j];
         }
     }
-
+    t_i = MPI_Wtime();
     MPI_Allreduce(reduceArr, reduceResults, K * total_values, MPI_DOUBLE, MPI_SUM,
                   comm);
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
 
 
     for (int k = 0; k < K; k++) {
@@ -500,12 +516,15 @@ int Node::run(int it) {
     }
 
     int globalNotChanged;
-
+    
     /*To stop the iteration k-means before reaching the max_iterations, in all Node no cluster has to change its centroids
      * w.r.t. preceding iteration. In order to reach this goal, we set a variable [notChanged] to 1 if no point changes its
      * membership, 0 otherwise. Then with All_Reduce all Nodes know how many nodes [globalNotChanged] have their points unchanged and if
      * if that number is equal to the number of processes it means that all points have not changed their memberships*/
+    t_i = MPI_Wtime();
     MPI_Allreduce(&notChanged, &globalNotChanged, 1, MPI_INT, MPI_SUM, comm);
+    t_f = MPI_Wtime();
+    total_time_without_comm += t_f - t_i;
 
     double end = MPI_Wtime();
     total_time += end - start;
@@ -655,14 +674,18 @@ void Node::getStatistics() {
 
     double *executionTimes;
     double totalExeTimeWithCom;
+    double *executionTimesWithoutComm;
+    double totalExeTimeWithoutCom;
     int numNodes;
     MPI_Comm_size(comm, &numNodes);
 
     if(rank == 0) {
         executionTimes = new double[numNodes];
+        executionTimesWithoutComm = new double[numNodes];
     }
 
     MPI_Gather(&total_time, 1 , MPI_DOUBLE, executionTimes, 1, MPI_DOUBLE, 0, comm);
+    MPI_Gather(&total_time_without_comm, 1 , MPI_DOUBLE, executionTimesWithoutComm, 1, MPI_DOUBLE, 0, comm);
 
     if(rank == 0) {
         cout << "---------------------  Statistics  ------------------------- " << endl;
@@ -675,7 +698,16 @@ void Node::getStatistics() {
             }
         }
 
+        cout << "\n - Communication time: " << endl;
+        for(int i = 0; i < numNodes; i++){
+            cout << "Process " << i << ": " << executionTimesWithoutComm[i] << endl;
+            if (totalExeTimeWithoutCom < executionTimes[i]-executionTimesWithoutComm[i]) {
+                totalExeTimeWithoutCom = executionTimes[i]-executionTimesWithoutComm[i];
+            }
+        }
+
         cout<< " - Total Time with Communication: "<< totalExeTimeWithCom << endl;
+        cout<< " - Total Time without Communication: "<< totalExeTimeWithoutCom << endl;
         cout << "\n - Number of points in each cluster" << endl;
         for(int k = 0; k < K; k++){
             int count = 0;

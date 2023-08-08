@@ -47,6 +47,7 @@ private:
                             // associated the id of nearest cluster in the corresponding position in membership
     int* globalMembership;
     double total_time; // total time with communication in each node
+    double total_time_without_comm; // total time without communication in each node
 
 
     int getIdNearestCluster(Point p);
