@@ -1,7 +1,3 @@
-//
-// Created by Claudio Russo Introito on 2019-04-28.
-//
-
 #include <mpi.h>
 #include <iostream>
 #include <algorithm>
@@ -72,8 +68,8 @@ void Node::setNumProcesses(int _numProcesses) {
 
 void Node::createDataset() {
     if(rank == 0) {
-        int numPoints = 40000, pointDimension=3, numClusters=12, maxIteration=1000;
-        newDatasetFilename = "random-dataset";
+        int numPoints = 400, pointDimension=2, numClusters=6, maxIteration=1000;
+        newDatasetFilename = "random-dataset-2";
         DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
         builder.createDataset();
 
@@ -123,7 +119,7 @@ void Node::readDataset() {
         if (newDatasetCreated) {
             filename = "data/" + newDatasetFilename + ".csv";
         } else {
-            filename = "data/random-dataset.csv";
+            filename = "data/random-dataset-2.csv";
         }
 
         // string distance_choice;
@@ -255,8 +251,7 @@ void Node::scatterDataset() {
     localDataset.resize(num_local_points);
 
     //Scatter points over the nodes
-    MPI_Scatterv(dataset.data(), pointsPerNode, datasetDisp, pointType, localDataset.data(), num_local_points,
-                 pointType, 0, comm);
+    MPI_Scatterv(dataset.data(), pointsPerNode, datasetDisp, pointType, localDataset.data(), num_local_points, pointType, 0, comm);
 
 
     //Send the dimension of points to each node
@@ -423,7 +418,7 @@ int Node::getIdNearestCluster(Point p) {
     return idCluster;
 }
 
-
+// kmeans loop
 int Node::run(int it) {
     double start = MPI_Wtime();
     double t_i,t_f;
@@ -442,6 +437,7 @@ int Node::run(int it) {
         memCounter = new int[K] ();
     }
 
+    // find membership (which point belongs to which cluster)
     for (int i = 0; i < localDataset.size(); i++) {
 
         int old_mem = memberships[i];
@@ -459,10 +455,11 @@ int Node::run(int it) {
         }
     }
 
-    MPI_Allreduce(memCounter, resMemCounter, K, MPI_INT, MPI_SUM, comm);  // We obtain the number of points that belong to each cluster
+    // We obtain the number of points that belong to each cluster
+    MPI_Allreduce(memCounter, resMemCounter, K, MPI_INT, MPI_SUM, comm);
     updateLocalSum();
 
-    /*To recalculate cluster centroids, we sum locally the points (values-to-values) which belong to a cluster.
+    /* To recalculate cluster centroids, we sum locally the points which belong to a cluster.
      * The result will be a point with values equal to that sum. This point is sent (with AllReduce) to each
      * node by each node with AllReduce, which computes the sum of each value-to-value among all sent points.
      */
@@ -483,16 +480,14 @@ int Node::run(int it) {
         }
     }
 
-    MPI_Allreduce(reduceArr, reduceResults, K * total_values, MPI_DOUBLE, MPI_SUM,
-                  comm);
-
+    MPI_Allreduce(reduceArr, reduceResults, K * total_values, MPI_DOUBLE, MPI_SUM, comm);
 
     for (int k = 0; k < K; k++) {
         for (int i = 0; i < total_values; i++) {
             if(resMemCounter[k] != 0) {
                 reduceResults[k * total_values + i] /= resMemCounter[k];
                 clusters[k].values[i] = reduceResults[k * total_values + i];
-            }else{
+            } else{
                 reduceResults[k * total_values + i] /= 1;
                 clusters[k].values[i] = reduceResults[k * total_values + i];
             }

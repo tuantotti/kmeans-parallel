@@ -14,6 +14,7 @@ def display_graph_with_tcom():
     K = df_additonal.loc[0, 'Number of Clusters']
     N = df_additonal.loc[0, 'Total Points']
     tittle = "K = " + K + ", N = " + N
+    plt.figure(figsize=(16, 9))
     plt.plot(numProcesses, exeTimeWithCom)
     plt.title(tittle)
     plt.xlabel('N_CPU')
