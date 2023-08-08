@@ -43,7 +43,48 @@ def display_graph_without_tcom():
     # Show the plot
     plt.savefig('img/execution-time-without-communication.png')
     plt.show()
+def display_graph_without_tcom_and_N_CPU_default():
+    df_additonal = pd.read_csv('results/test.csv', nrows=2)
+    df_additonal.drop_duplicates(inplace=True)
+    df = pd.read_csv('results/test.csv', skiprows=2)
 
+    numPoints = df['Number of Points']
+    exeTimeWithoutCom = df['Total Time without Communication']
+
+    # Create a line plot
+    K = df_additonal.loc[0, 'Number of Clusters']
+    P = df_additonal.loc[0, 'Number of Processes']
+    tittle = "K = " + K + ", P = " + P
+    plt.figure(figsize=(16, 9))
+    plt.plot(numPoints, exeTimeWithoutCom)
+    plt.title(tittle)
+    plt.xlabel('Number of Points')
+    plt.ylabel('Total Time Without Tcom (s)')
+    # Show the plot
+    plt.savefig('img/execution-time-without-communication_N_CPU_default.png')
+    plt.show()
+def display_graph_with_tcom_and_N_CPU_default():
+    df_additonal = pd.read_csv('results/test.csv', nrows=2)
+    df_additonal.drop_duplicates(inplace=True)
+    df = pd.read_csv('results/test.csv', skiprows=2)
+
+    numPoints = df['Number of Points']
+    exeTimeWithoutCom = df['Total Time with Communication']
+
+    # Create a line plot
+    K = df_additonal.loc[0, 'Number of Clusters']
+    P = df_additonal.loc[0, 'Number of Processes']
+    tittle = "K = " + K + ", P = " + P
+    plt.figure(figsize=(16, 9))
+    plt.plot(numPoints, exeTimeWithoutCom)
+    plt.title(tittle)
+    plt.xlabel('Number of Points')
+    plt.ylabel('Total Time With Tcom (s)')
+    # Show the plot
+    plt.savefig('img/execution-time-with-communication_N_CPU_default.png')
+    plt.show()
 if __name__ == '__main__':
-    display_graph_with_tcom()
-    display_graph_without_tcom()
+    # display_graph_with_tcom()
+    # display_graph_without_tcom()
+    # display_graph_without_tcom_and_N_CPU_default()
+    display_graph_with_tcom_and_N_CPU_default()
