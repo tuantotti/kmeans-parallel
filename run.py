@@ -4,18 +4,19 @@ import subprocess
 import pandas as pd
 import csv
 
-num_processes = [4, 8, 12, 16, 32]
+num_processes = [16, 24, 32, 40, 64, 128]
 # num_processes = range(4, 32, 2)
 # compile code 
-os.system("mpic++ -fopenmp -o main main.cpp Node.cpp DatasetBuilder.cpp")
+os.system("mpic++ -fopenmp -o main main.cpp Node.cpp")
 
-additional_df = pd.DataFrame(columns=['Number of Clusters', 'Total Points'])
+additional_df = pd.DataFrame(columns=['Number of Clusters', 'Total Points', '0'])
 df = pd.DataFrame(columns=['Number of Processes', 'Total Time with Communication', 'Total Time without Communication'])
 
 # run with multiple processes
 for i in num_processes:
     print('Run with number of processes = ', i)
-    result = subprocess.run(['mpirun','-hostfile', '/etc/hosts', '--oversubscribe', '-np', str(i), 'main'], capture_output=True, text=True)
+    # result = subprocess.run(['mpirun','-hostfile', '/etc/hosts', '--oversubscribe', '-np', str(i), 'main'], capture_output=True, text=True)
+    result = subprocess.run(['mpirun','--oversubscribe', '-np', str(i), 'main'], capture_output=True, text=True)
     # Display the result from the command line
     # print(result.stdout)
 
@@ -31,7 +32,8 @@ for i in num_processes:
 
         row = {
             'Number of Clusters': number_of_clusters,
-            'Total Points': total_points
+            'Total Points': total_points,
+            '0': 0
         }
         dfTemp = pd.DataFrame([row])
         additional_df = pd.concat([additional_df, dfTemp], ignore_index=True)
@@ -59,7 +61,7 @@ print(additional_df)
 print(df)
 
 # write to csv file
-with open('results/execution-time.csv', 'w', newline='') as csvfile:
+with open('results/execution-time-1-computer.csv', 'w', newline='') as csvfile:
     csvwriter = csv.writer(csvfile)
     csvwriter.writerow(additional_df.columns.tolist())
     csvwriter.writerows(additional_df.values.tolist())

@@ -7,7 +7,6 @@
 #include <sstream>
 #include <math.h>
 #include "Node.h"
-#include "DatasetBuilder.h"
 
 
 Node::Node(int rank, MPI_Comm comm) : rank(rank), comm(comm), notChanged(1) {
@@ -66,53 +65,6 @@ void Node::setNumProcesses(int _numProcesses) {
     numProcesses = _numProcesses;
 }
 
-
-void Node::createDataset() {
-    if(rank == 0) {
-        int numPoints = 400, pointDimension=2, numClusters=6, maxIteration=1000;
-        newDatasetFilename = "random-dataset-2";
-        DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
-        builder.createDataset();
-
-        newDatasetCreated = true;
-
-        // string answer;
-        // cout << "Do you want to create a new dataset? (yes/no)" << endl;
-        // getline(cin, answer);
-
-        // if (answer == "yes") {
-        //     int numPoints, pointDimension, numClusters, maxIteration;
-        //     string filename, out;
-
-        //     cout << "How many points do you want to create?" << endl;
-        //     getline(cin, out);
-        //     numPoints = stoi(out);
-
-        //     cout << "Point dimension: ";
-        //     getline(cin, out);
-        //     pointDimension = stoi(out);
-
-        //     cout << "\nNumber of clusters: ";
-        //     getline(cin, out);
-        //     numClusters = stoi(out);
-
-        //     cout << "\nMax iteration: ";
-        //     getline(cin, out);
-        //     maxIteration = stoi(out);
-
-        //     cout << "\nFilename: ";
-        //     getline(cin, newDatasetFilename);
-
-        //     DatasetBuilder builder(numPoints, pointDimension, numClusters, maxIteration, newDatasetFilename);
-        //     builder.createDataset();
-
-        //     newDatasetCreated = true;
-        // }
-
-    }
-
-}
-
 void Node::readDataset() {
 
     if (rank == 0) {
@@ -120,40 +72,9 @@ void Node::readDataset() {
         if (newDatasetCreated) {
             filename = "data/" + newDatasetFilename + ".csv";
         } else {
-            filename = "data/random-dataset-2-150000.csv";
+            filename = "data/random-dataset-2-180000.csv";
         }
 
-        // string distance_choice;
-        // bool onDistance = true;
-        // while(onDistance) {
-        //     cout << "\nWhich distance do you want to use? " << endl;
-        //     cout << "1) Euclidean Distance" << endl;
-        //     cout << "2) Cosine Similarity" << endl;
-        //     cout << "Enter your choice and press return: ";
-
-        //     getline(cin, distance_choice);
-        //     distance = atoi(distance_choice.c_str());
-
-        //     switch(distance){
-        //         case 1: {
-        //             onDistance = false;
-        //             break;
-        //         }
-        //         case 2: {
-        //             onDistance = false;
-        //             break;
-        //         }
-
-        //         default: {
-        //             cout << "Not a Valid Choice. \n";
-        //             cout << "Choose again.\n";
-        //             //getline(cin, distance_choice);
-        //             //distance = atoi(distance_choice.c_str());
-        //             //onDistance = false;
-        //             break;
-        //         }
-        //     }
-        // }
         distance = 1;
 
         ifstream infile(filename);
@@ -293,21 +214,12 @@ void Node::initCentroids() {
         }
 
         string string_choice;
-        int choice;
+        int choice = 2;
         bool gameOn = true;
 
-        while(gameOn){
-            // cout << "\nChoose initialization method" <<endl;
-            // cout << "1) Random \n";
-            // cout << "2) First k points\n";
-            // cout << "3) 12 points referring to 12 different topics\n";
-            // cout << "Enter your choice and press return: ";
-
-            // getline(cin, string_choice);
-            // choice = atoi(string_choice.c_str());
-            choice = 1;
-
+        while(gameOn) {
             switch (choice){
+                // Choose randomly initialization method
                 case 1: {
                     vector<int> clusterIndices;
                     vector<int> prohibitedIndices;
@@ -329,30 +241,12 @@ void Node::initCentroids() {
                     gameOn = false;
                     break;
                 }
-
+                // Choose the First k points initialization method
                 case 2: {
                     for (int i = 0; i < K; i++) {
                         clusters.push_back(dataset[i]);
                     }
                     gameOn = false;
-                    break;
-                }
-
-                case 3: {
-                    // Fixed point referring to different topics
-                    vector<int> allDiffTopicsPoint = {0, 1, 2, 4, 5, 6, 8, 9, 13, 17, 19, 7030};
-                    for (int i = 0; i < allDiffTopicsPoint.size(); i++) {
-                        clusters.push_back(dataset[allDiffTopicsPoint[i]]);
-                    }
-                    gameOn = false;
-                    break;
-                }
-
-                default: {
-                    cout << "Not a Valid Choice. \n";
-                    cout << "Choose again.\n";
-                    getline(cin, string_choice);
-                    choice = atoi(string_choice.c_str());
                     break;
                 }
             }
@@ -388,7 +282,7 @@ void Node::initCentroids() {
 int Node::getIdNearestCluster(Point p) {
     int idCluster = 0;  //is the position in the vector clusters, not the id of the point that represents the initial centroid
 
-    if(distance == 1){  //Refers to Euclidean Distance
+    if(distance == 1) {  //Refers to Euclidean Distance
         double sum = 0.0;
         double min_dist;
 
@@ -412,7 +306,7 @@ int Node::getIdNearestCluster(Point p) {
         }
     }
 
-    else if(distance == 2){    //Refers to Cosine Similarity
+    else if(distance == 2) {    //Refers to Cosine Similarity
 
         double max_sim = 0.0;
 
@@ -545,7 +439,7 @@ void Node::updateLocalSum() {
 }
 
 
-Node::~Node(){
+Node::~Node() {
     delete []reduceArr;
     delete []reduceResults;
     delete []memCounter;
@@ -603,7 +497,7 @@ void Node::printClusters() {
     }
 }
 
-int Node::getMaxIterations(){
+int Node::getMaxIterations() {
     return max_iterations;
 }
 
@@ -615,55 +509,6 @@ void Node::writeClusterMembership(string filename){
         myfile << dataset[p].id << "," << clusters[globalMembership[p]].id << "\n";
     }
     myfile.close();
-}
-
-vector<double> Node::SSW() {
-    //Standard Deviation of the sum of squares within each cluster
-    vector<double> ssws;
-    double ssw = 0.0;
-
-    for (int k = 0; k < K; k++) {
-
-        double dist;
-        double sum;
-        for (int j = 0; j < numPoints; j++) {
-            if (k == globalMembership[j]) {
-
-                sum = squared_norm(dataset[j], clusters[k]);
-
-                dist = sqrt(sum);
-                ssw += dist;
-            }
-        }
-        ssws.push_back(sqrt(sum));
-    }
-    return ssws;
-}
-
-
-double Node::SSB() {
-    //Standard Deviation of the sum of squares between clusters and mean point values
-
-    //Find the mean point values among all points
-    double sum = 0.0;
-    double ssb = 0.0;
-    Point mean;
-    fill_n(mean.values, total_values, 0);
-
-    for(int i = 0; i < numPoints; i++){
-        mean += dataset[i];
-    }
-    for(int j = 0; j < total_values; j++){
-        mean.values[j] /= numPoints;
-    }
-
-    for(int k = 0; k < K; k++){
-        sum += squared_norm(clusters[k], mean);
-
-    }
-    ssb = sqrt(sum);
-
-    return ssb;
 }
 
 void Node::getStatistics() {
@@ -714,17 +559,6 @@ void Node::getStatistics() {
             }
             cout << "Cluster " << k << " : " << count << endl;
         }
-
-        // cout << "\n - Variance: " << endl;
-        // cout << "    - SSW: " << endl;
-        // vector<double> ssws = SSW();
-        // for(int i = 0; i < ssws.size(); i++) {
-        //     cout << "       Cluster " << i << " : " << ssws[i] << endl;
-        // }
-
-        // cout << "\n   - SSB:    ";
-        // double ssb = SSB();
-        // cout << ssb << endl;
     }
 }
 

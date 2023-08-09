@@ -4,9 +4,9 @@ import pandas as pd
 import csv
 
 np.random.seed(11)
-means = [[2, 2], [10, 3], [3, 10]]
+means = [[2, 2], [12, 3], [3, 12]]
 cov = [[1, 0], [0, 1]]
-N = 60000
+N = 600000
 K = 3
 
 def create_dataset(K, N, means, cov, is_save=False):
@@ -20,7 +20,7 @@ def create_dataset(K, N, means, cov, is_save=False):
     df = pd.DataFrame(X)
 
     if is_save:
-        with open('data/random-dataset-2-180000.csv', 'w', newline='') as csvfile:
+        with open('data/random-dataset-2-1800000.csv', 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow([2, 3, 1000])
             csvwriter.writerows(df.values.tolist())
