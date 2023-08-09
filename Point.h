@@ -6,7 +6,7 @@
 using namespace std;
 
 struct Point {
-    double values[MAX_DIM];
+    double values[MAX_DIM]; // store the value of each dimension
     int id;
     int size;
 

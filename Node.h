@@ -23,7 +23,7 @@ private:
     MPI_Comm comm;
     MPI_Datatype pointType;
 
-    int total_values;
+    int total_values; // number of columns or the dimension of dataset
     int num_local_points;
     int K, max_iterations;
     int numPoints; // Total number of points in the whole dataset
@@ -41,7 +41,7 @@ private:
     vector<Point> dataset; // The dataset at master node or process with rank id = 0
     vector<Point> localDataset; // the local dataset in each node
     vector<Point> clusters; // centroids
-    vector<Point> localSum;
+    vector<Point> localSum; // the local sum of all point of a cluster belonging to a node
     int numPointsPerNode;
     vector<int> memberships; //This vector has same length as localDataset: for each point in localDataset is
                             // associated the id of nearest cluster in the corresponding position in membership

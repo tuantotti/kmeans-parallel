@@ -75,26 +75,11 @@ int main(int argc, char *argv[]) {
         gm = node.getGlobalMemberships();
         int numPoints = node.getNumPoints();
 
-        // node.printClusters();
-
-        // string doWrite;
-        // cout << "Do you want to save points membership? (y/n)" << endl;
-        // getline(cin, doWrite);
-        // if(doWrite == "y") {
-        //     string outFilename = "membershipsFilename";
-        //     cout << "Specify output filename: (Eg: point-saved --> save in /results/point-saved.csv)\n";
-        //     getline(cin, outFilename);
-
-        //     node.writeClusterMembership(outFilename);
-        // }
-
-        node.writeClusterMembership("1-computer-point-saved-2");
-
+        node.printClusters();
+        node.writeClusterMembership("point-saved-2");
     }
 
     node.getStatistics();
-
-    //cout << "\nThe program in rank " << rank << " tooks : " << end - start << " to run" << endl;
 
     /*Do all your I/O with cout in the process with rank 0. If you want to output some data from other processes,
      * just send MPI message with this data to rank 0.*/

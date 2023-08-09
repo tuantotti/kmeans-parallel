@@ -387,8 +387,7 @@ int Node::run(int it) {
         }
     }
     t_i = MPI_Wtime();
-    MPI_Allreduce(reduceArr, reduceResults, K * total_values, MPI_DOUBLE, MPI_SUM,
-                  comm);
+    MPI_Allreduce(reduceArr, reduceResults, K * total_values, MPI_DOUBLE, MPI_SUM, comm);
     t_f = MPI_Wtime();
     total_time_without_comm += t_f - t_i;
 
@@ -484,16 +483,20 @@ int Node::getNumPoints() {
 }
 
 void Node::printClusters() {
-    int total = 0;
+    ofstream myfile;
+    myfile.open("results/cluster-points.csv");
+    cout << "The value of clusters: \n";
     for (int i = 0; i < K; i++) {
-        cout << "Cluster " << i << " contains: " << endl;
-        int count = 0;
-        for (int j = 0; j < numPoints; j++) {
-            if (i == globalMembership[j]) {
-                cout << "Point " << dataset[j].id << endl;
-                count++;
+        cout << "Point "<< i <<" (";
+        for (int j = 0; j < total_values; j++) {
+            cout << clusters[i].values[j] << " ";
+            if (j == total_values - 1) {
+                myfile << clusters[i].values[j] << "\n";
+            } else {
+                myfile << clusters[i].values[j] << ",";
             }
         }
+        cout << ")" << endl;
     }
 }
 
