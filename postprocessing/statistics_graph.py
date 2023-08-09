@@ -48,57 +48,48 @@ def display_graph_without_tcom():
     # Show the plot
     plt.savefig('img/execution-time-without-communication.png')
     plt.show()
-
-def display_graph_fix_cpu_with_tcom():
+def display_graph_without_tcom_and_N_CPU_default():
     df_additonal = pd.read_csv('results/test.csv', nrows=2)
     df_additonal.drop_duplicates(inplace=True)
     df = pd.read_csv('results/test.csv', skiprows=2)
 
     numPoints = df['Number of Points']
-    exeTimeWithCom = df['Total Time with Communication']
+    exeTimeWithoutCom = df['Total Time without Communication']
 
     # Create a line plot
     K = df_additonal.loc[0, 'Number of Clusters']
-    N_CPU = df_additonal.loc[0, 'Number of Processes']
-    tittle = "Time with communication: K = " + K + ", N_CPU = " + N_CPU
+    P = df_additonal.loc[0, 'Number of Processes']
+    tittle = "K = " + K + ", P = " + P
     plt.figure(figsize=(16, 9))
-    plt.plot(numPoints, exeTimeWithCom)
-    plt.scatter(numPoints, exeTimeWithCom, label='Fix N_CPU')
+    plt.plot(numPoints, exeTimeWithoutCom)
     plt.title(tittle)
     plt.xlabel('Number of Points')
-    plt.ylabel('Total Time With Tcom (s)')
-    plt.legend(bbox_to_anchor=(1, 0.5), loc='center left', frameon=False)
-
+    plt.ylabel('Total Time Without Tcom (s)')
     # Show the plot
-    plt.savefig('img/fix-CPU-communication.png')
+    plt.savefig('img/execution-time-without-communication_N_CPU_default.png')
     plt.show()
-
-def display_graph_fix_cpu_without_tcom():
+def display_graph_with_tcom_and_N_CPU_default():
     df_additonal = pd.read_csv('results/test.csv', nrows=2)
     df_additonal.drop_duplicates(inplace=True)
     df = pd.read_csv('results/test.csv', skiprows=2)
 
     numPoints = df['Number of Points']
-    exeTimeWithCom = df['Total Time without Communication']
+    exeTimeWithoutCom = df['Total Time with Communication']
 
     # Create a line plot
     K = df_additonal.loc[0, 'Number of Clusters']
-    N_CPU = df_additonal.loc[0, 'Number of Processes']
-    tittle = "Time without communication: K = " + K + ", N_CPU = " + N_CPU
+    P = df_additonal.loc[0, 'Number of Processes']
+    tittle = "K = " + K + ", P = " + P
     plt.figure(figsize=(16, 9))
-    plt.plot(numPoints, exeTimeWithCom)
-    plt.scatter(numPoints, exeTimeWithCom, label='Fix N_CPU')
+    plt.plot(numPoints, exeTimeWithoutCom)
     plt.title(tittle)
     plt.xlabel('Number of Points')
     plt.ylabel('Total Time With Tcom (s)')
-    plt.legend(bbox_to_anchor=(1, 0.5), loc='center left', frameon=False)
-
     # Show the plot
-    plt.savefig('img/fix-CPU-without-communication.png')
+    plt.savefig('img/execution-time-with-communication_N_CPU_default.png')
     plt.show()
-
 if __name__ == '__main__':
     # display_graph_with_tcom()
     # display_graph_without_tcom()
-    display_graph_fix_cpu_with_tcom()
-    display_graph_fix_cpu_without_tcom()
+    # display_graph_without_tcom_and_N_CPU_default()
+    display_graph_with_tcom_and_N_CPU_default()
